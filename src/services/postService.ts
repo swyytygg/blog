@@ -1,0 +1,250 @@
+import { supabase } from './supabase';
+
+export interface Post {
+    id: string;
+    title: string;
+    slug: string;
+    content: string;
+    content_type?: 'markdown' | 'html'; // content_type 추가
+    description?: string;
+    thumbnail_url?: string;
+    category?: string;
+    tags?: string[];
+    view_count?: number;
+    comment_count?: number;
+    status: 'published' | 'draft' | 'private';
+    created_at: string;
+    updated_at?: string;
+}
+
+export interface SearchParams {
+    query?: string;
+    category?: string;
+    tag?: string;
+    limit?: number;
+    offset?: number;
+}
+
+export interface CreatePostInput {
+    title: string;
+    content: string;
+    content_type?: 'markdown' | 'html';
+    slug: string;
+    category?: string;
+    tags?: string[];
+    thumbnail_url?: string;
+    author_id: string;
+    is_published: boolean;
+}
+
+export interface UpdatePostInput {
+    title?: string;
+    content?: string;
+    content_type?: 'markdown' | 'html';
+    slug?: string;
+    category?: string;
+    tags?: string[];
+    thumbnail_url?: string;
+    is_published?: boolean;
+}
+
+export const postService = {
+    // 게시글 생성
+    async createPost(post: CreatePostInput) {
+        return await supabase
+            .from('posts')
+            .insert({
+                ...post,
+                status: post.is_published ? 'published' : 'draft'
+            })
+            .select()
+            .single();
+    },
+
+    // 게시글 수정
+    async updatePost(id: string, updates: UpdatePostInput) {
+        const updateData: any = { ...updates };
+        if (updates.is_published !== undefined) {
+            updateData.status = updates.is_published ? 'published' : 'draft';
+            delete updateData.is_published;
+        }
+
+        return await supabase
+            .from('posts')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+    },
+
+    // 게시글 삭제
+    async deletePost(id: string) {
+        return await supabase
+            .from('posts')
+            .delete()
+            .eq('id', id);
+    },
+
+    // 모든 게시글 가져오기 (관리자용, 페이지네이션 포함)
+    async getAdminPosts(page: number = 1, limit: number = 10) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        return await supabase
+            .from('posts')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(from, to);
+    },
+
+    // 공개된 게시글 가져오기 (블로그용, 공지사항 제외)
+    async getPosts(limit?: number) {
+        let query = supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .neq('category', '공지사항') // 공지사항은 메인 리스트에서 제외
+            .order('created_at', { ascending: false });
+
+        if (limit) {
+            query = query.limit(limit);
+        }
+
+        return await query;
+    },
+
+    // 슬러그로 게시글 가져오기
+    async getPostBySlug(slug: string) {
+        return await supabase
+            .from('posts')
+            .select('*, profiles(display_name, avatar_url)')
+            .eq('slug', slug)
+            .single();
+    },
+
+    // 검색 기능
+    async searchPosts(params: SearchParams) {
+        let query = supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published');
+
+        // 텍스트 검색 (제목, 설명, 내용)
+        if (params.query) {
+            // Supabase full-text search 또는 ilike 사용
+            query = query.or(
+                `title.ilike.%${params.query}%,description.ilike.%${params.query}%,content.ilike.%${params.query}%`
+            );
+        }
+
+        // 카테고리 필터
+        if (params.category) {
+            query = query.eq('category', params.category);
+        }
+
+        // 태그 필터
+        if (params.tag) {
+            query = query.contains('tags', [params.tag]);
+        }
+
+        // 정렬 및 페이지네이션
+        query = query.order('created_at', { ascending: false });
+
+        if (params.limit) {
+            query = query.limit(params.limit);
+        }
+
+        if (params.offset) {
+            query = query.range(params.offset, params.offset + (params.limit || 10) - 1);
+        }
+
+        return await query;
+    },
+
+    // 카테고리별 게시글 가져오기
+    async getPostsByCategory(category: string) {
+        return await supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .eq('category', category)
+            .order('created_at', { ascending: false });
+    },
+
+    // 태그별 게시글 가져오기
+    async getPostsByTag(tag: string) {
+        return await supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .contains('tags', [tag])
+            .order('created_at', { ascending: false });
+    },
+
+    // 인기 게시글 가져오기 (조회수 기준)
+    async getPopularPosts(limit: number = 5) {
+        return await supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .order('view_count', { ascending: false })
+            .limit(limit);
+    },
+
+    // 최근 게시글 가져오기
+    async getRecentPosts(limit: number = 5) {
+        return await supabase
+            .from('posts')
+            .select('id, title, created_at, slug')
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+    },
+
+    // 조회수 증가
+    async incrementViewCount(postId: string) {
+        return await supabase.rpc('increment_view_count', { post_id: postId });
+    },
+
+    // 이전글 가져오기 (현재 글보다 이전에 작성된 글)
+    async getPrevPost(currentCreatedAt: string) {
+        return await supabase
+            .from('posts')
+            .select('id, title, slug, thumbnail_url')
+            .eq('status', 'published')
+            .lt('created_at', currentCreatedAt)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+    },
+
+    // 다음글 가져오기 (현재 글보다 이후에 작성된 글)
+    async getNextPost(currentCreatedAt: string) {
+        return await supabase
+            .from('posts')
+            .select('id, title, slug, thumbnail_url')
+            .eq('status', 'published')
+            .gt('created_at', currentCreatedAt)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .single();
+    },
+
+    // 관련 게시글 가져오기 (같은 카테고리 또는 태그)
+    async getRelatedPosts(postId: string, category?: string, tags?: string[], limit: number = 3) {
+        let query = supabase
+            .from('posts')
+            .select('id, title, slug, thumbnail_url, created_at')
+            .eq('status', 'published')
+            .neq('id', postId);
+
+        if (category) {
+            query = query.eq('category', category);
+        }
+
+        return await query
+            .order('created_at', { ascending: false })
+            .limit(limit);
+    }
+};
+
