@@ -54,7 +54,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, variant = 'card' }) => {
                         <div className="flex items-center justify-between text-xs text-gray-400">
                             <div className="flex items-center gap-1">
                                 <Calendar size={12} />
-                                <span>{formatDate(post.created_at)}</span>
+                                <span>{formatDate(post.published_at || post.created_at)}</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 {/* 조회수 */}
@@ -117,7 +117,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, variant = 'card' }) => {
                     <div className="flex items-center gap-4 text-xs text-gray-400">
                         <div className="flex items-center gap-1">
                             <Calendar size={12} />
-                            <span>{formatDate(post.created_at)}</span>
+                            <span>{formatDate(post.published_at || post.created_at)}</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <Eye size={12} />

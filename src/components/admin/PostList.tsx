@@ -164,7 +164,7 @@ const PostList: React.FC<PostListProps> = ({ onEdit }) => {
                             <th className="px-4 py-3 text-left font-semibold text-gray-600 text-sm">카테고리</th>
                             <th className="px-4 py-3 text-center font-semibold text-gray-600 text-sm">상태</th>
                             <th className="px-4 py-3 text-center font-semibold text-gray-600 text-sm">조회수</th>
-                            <th className="px-4 py-3 text-center font-semibold text-gray-600 text-sm">작성일</th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-600 text-sm">발행/예약일</th>
                             <th className="px-4 py-3 text-center font-semibold text-gray-600 text-sm">관리</th>
                         </tr>
                     </thead>
@@ -209,7 +209,16 @@ const PostList: React.FC<PostListProps> = ({ onEdit }) => {
                                     </button>
                                 </td>
                                 <td className="px-4 py-3 text-center text-sm text-gray-500">{post.view_count || 0}</td>
-                                <td className="px-4 py-3 text-center text-sm text-gray-500">{formatDate(post.created_at)}</td>
+                                <td className="px-4 py-3 text-center text-sm text-gray-500">
+                                    <div className="flex flex-col items-center">
+                                        <span>{formatDate(post.published_at || post.created_at)}</span>
+                                        {post.published_at && new Date(post.published_at) > new Date() && (
+                                            <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded mt-0.5 animate-pulse">
+                                                예약
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
                                 <td className="px-4 py-3 text-center">
                                     <div className="flex items-center justify-center gap-2">
                                         <button

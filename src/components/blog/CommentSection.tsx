@@ -67,8 +67,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.author_name.trim() || !formData.password.trim() || !formData.content.trim()) {
-            alert('이름, 비밀번호, 내용을 모두 입력해주세요.');
+        // 내용만 필수로 체크
+        if (!formData.content.trim()) {
+            alert('내용을 입력해주세요.');
             return;
         }
 
@@ -79,7 +80,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                 ...formData
             });
 
-            if (error) throw error;
+            if (error && (error as any).code !== 'PGRST116') throw error;
 
             setFormData({
                 author_name: '',
@@ -89,18 +90,29 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
             });
 
             loadComments();
-        } catch (error) {
+        } catch (error: any) {
             console.error('댓글 작성 실패:', error);
-            alert('댓글 작성에 실패했습니다.');
+            alert(`댓글 작성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
         } finally {
             setSubmitting(false);
         }
     };
 
+    const [isAdmin, setIsAdmin] = useState(false);
+    useEffect(() => {
+        const checkAdmin = async () => {
+            const { data: { session } } = await commentService.checkSession?.() || { data: { session: null } };
+            // 만약 commentService에 checkSession이 없다면 직접 supabase.auth.getSession() 사용
+            // 하지만 guestbookService에서 했던 것 처럼 세션 체크 필요
+            setIsAdmin(!!session);
+        };
+        checkAdmin();
+    }, []);
+
     // 답글 작성
     const handleReplySubmit = async (parentId: string) => {
-        if (!replyData.author_name.trim() || !replyData.password.trim() || !replyData.content.trim()) {
-            alert('이름, 비밀번호, 내용을 모두 입력해주세요.');
+        if (!replyData.content.trim()) {
+            alert('내용을 입력해주세요.');
             return;
         }
 
@@ -112,14 +124,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                 ...replyData
             });
 
-            if (error) throw error;
+            if (error && (error as any).code !== 'PGRST116') throw error;
 
             setReplyTo(null);
             setReplyData({ author_name: '', password: '', content: '' });
             loadComments();
-        } catch (error) {
+        } catch (error: any) {
             console.error('답글 작성 실패:', error);
-            alert('답글 작성에 실패했습니다.');
+            alert(`답글 작성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
         } finally {
             setSubmitting(false);
         }
@@ -127,13 +139,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
 
     // 댓글 삭제
     const handleDelete = async () => {
-        if (!deletePassword.trim()) {
+        if (!isAdmin && !deletePassword.trim()) {
             alert('비밀번호를 입력해주세요.');
             return;
         }
 
         try {
-            const { error } = await commentService.deleteComment(deleteModal.id, deletePassword, postId);
+            const { error } = await commentService.deleteComment(deleteModal.id, isAdmin ? undefined : deletePassword, postId);
             if (error) throw error;
 
             setDeleteModal({ id: '', visible: false });
@@ -174,7 +186,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                             type="text"
                             value={formData.author_name}
                             onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
-                            placeholder="이름"
+                            placeholder="이름 (선택)"
                             className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                             maxLength={30}
                         />
@@ -182,7 +194,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                             type="password"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            placeholder="비밀번호"
+                            placeholder="비밀번호 (선택)"
                             className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                             maxLength={20}
                         />
@@ -228,7 +240,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
             ) : comments.length === 0 ? (
                 <div className="text-center py-10">
                     <MessageCircle size={40} className="text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">첫 번째 댓글을 남겨주세요!</p>
+                    <p className="text-gray-500">댓글을 남겨 주세요.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -238,11 +250,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                             <div className="bg-white border border-gray-100 rounded-xl p-4">
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                                            {comment.author_name.charAt(0).toUpperCase()}
+                                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium uppercase">
+                                            {(comment.author_name || '익').charAt(0)}
                                         </div>
                                         <div>
-                                            <span className="font-medium text-gray-900 text-sm">{comment.author_name}</span>
+                                            <span className="font-medium text-gray-900 text-sm">{comment.author_name || '익명'}</span>
                                             <span className="text-xs text-gray-400 ml-2">{formatDate(comment.created_at)}</span>
                                         </div>
                                     </div>
@@ -264,7 +276,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                                     </div>
                                 </div>
                                 <p className="text-sm text-gray-700 whitespace-pre-wrap ml-11">
-                                    {comment.is_private ? '🔒 비밀 댓글입니다.' : comment.content}
+                                    {comment.is_private && !isAdmin ? '🔒 비밀 댓글입니다.' : comment.content}
                                 </p>
                             </div>
 
@@ -276,14 +288,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                                             type="text"
                                             value={replyData.author_name}
                                             onChange={(e) => setReplyData({ ...replyData, author_name: e.target.value })}
-                                            placeholder="이름"
+                                            placeholder="이름 (선택)"
                                             className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                         />
                                         <input
                                             type="password"
                                             value={replyData.password}
                                             onChange={(e) => setReplyData({ ...replyData, password: e.target.value })}
-                                            placeholder="비밀번호"
+                                            placeholder="비밀번호 (선택)"
                                             className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                         />
                                     </div>
@@ -320,7 +332,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                                             <div className="flex items-start justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <Reply size={12} className="text-gray-400" />
-                                                    <span className="font-medium text-gray-900 text-sm">{reply.author_name}</span>
+                                                    <span className="font-medium text-gray-900 text-sm">{reply.author_name || '익명'}</span>
                                                     <span className="text-xs text-gray-400">{formatDate(reply.created_at)}</span>
                                                 </div>
                                                 <button
@@ -331,7 +343,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                                                 </button>
                                             </div>
                                             <p className="text-sm text-gray-600 ml-5">
-                                                {reply.is_private ? '🔒 비밀 댓글입니다.' : reply.content}
+                                                {reply.is_private && !isAdmin ? '🔒 비밀 댓글입니다.' : reply.content}
                                             </p>
                                         </div>
                                     ))}
@@ -359,28 +371,30 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
                             </button>
                         </div>
                         <p className="text-sm text-gray-500 mb-4">
-                            삭제하려면 비밀번호를 입력하세요.
+                            {isAdmin ? '관리자 권한으로 삭제합니다.' : '삭제하려면 비밀번호를 입력하세요.'}
                         </p>
-                        <input
-                            type="password"
-                            value={deletePassword}
-                            onChange={(e) => setDeletePassword(e.target.value)}
-                            placeholder="비밀번호"
-                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
-                        />
+                        {!isAdmin && (
+                            <input
+                                type="password"
+                                value={deletePassword}
+                                onChange={(e) => setDeletePassword(e.target.value)}
+                                placeholder="비밀번호"
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+                            />
+                        )}
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
                                     setDeleteModal({ id: '', visible: false });
                                     setDeletePassword('');
                                 }}
-                                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+                                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
                             >
                                 취소
                             </button>
                             <button
                                 onClick={handleDelete}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
                             >
                                 삭제
                             </button>

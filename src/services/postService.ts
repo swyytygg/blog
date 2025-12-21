@@ -5,17 +5,19 @@ export interface Post {
     title: string;
     slug: string;
     content: string;
-    content_type?: 'markdown' | 'html'; // content_type 추가
+    content_type?: 'markdown' | 'html';
     description?: string;
-    thumbnail_url?: string;
+    thumbnail_url?: string | null;
     category?: string;
+    category_id?: string | null;
+    author_id?: string | null;
     tags?: string[];
-    view_count?: number;
+    view_count?: number | null;
     comment_count?: number;
-    status: 'published' | 'draft' | 'private';
-    published_at: string; // 예약 발행 날짜용 필드
+    status: string;
+    published_at?: string | null;
     created_at: string;
-    updated_at?: string;
+    updated_at?: string | null;
 }
 
 export interface SearchParams {
@@ -54,11 +56,11 @@ export interface UpdatePostInput {
 export const postService = {
     // 게시글 생성
     async createPost(post: CreatePostInput) {
-        return await supabase
-            .from('posts')
+        const { is_published, ...postData } = post;
+        return await (supabase.from('posts') as any)
             .insert({
-                ...post,
-                status: post.is_published ? 'published' : 'draft'
+                ...postData,
+                status: is_published ? 'published' : 'draft'
             })
             .select()
             .single();
@@ -72,8 +74,7 @@ export const postService = {
             delete updateData.is_published;
         }
 
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .update(updateData)
             .eq('id', id)
             .select()
@@ -82,8 +83,7 @@ export const postService = {
 
     // 게시글 삭제
     async deletePost(id: string) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .delete()
             .eq('id', id);
     },
@@ -93,8 +93,7 @@ export const postService = {
         const from = (page - 1) * limit;
         const to = from + limit - 1;
 
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('*', { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(from, to);
@@ -102,13 +101,12 @@ export const postService = {
 
     // 공개된 게시글 가져오기 (블로그용, 공지사항 제외)
     async getPosts(limit?: number) {
-        let query = supabase
-            .from('posts')
+        let query = (supabase.from('posts') as any)
             .select('*')
             .eq('status', 'published')
-            .lte('published_at', new Date().toISOString()) // 예약 발행 날짜 체크
+            .lte('published_at', new Date().toISOString())
             .neq('category', '공지사항')
-            .order('published_at', { ascending: false }); // 발행일 순으로 변경
+            .order('published_at', { ascending: false });
 
         if (limit) {
             query = query.limit(limit);
@@ -119,8 +117,7 @@ export const postService = {
 
     // 슬러그로 게시글 가져오기
     async getPostBySlug(slug: string) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('*, profiles(display_name, avatar_url)')
             .eq('slug', slug)
             .eq('status', 'published')
@@ -130,8 +127,7 @@ export const postService = {
 
     // 검색 기능
     async searchPosts(params: SearchParams) {
-        let query = supabase
-            .from('posts')
+        let query = (supabase.from('posts') as any)
             .select('*')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString());
@@ -155,7 +151,7 @@ export const postService = {
         }
 
         // 정렬 및 페이지네이션
-        query = query.order('created_at', { ascending: false });
+        query = query.order('published_at', { ascending: false });
 
         if (params.limit) {
             query = query.limit(params.limit);
@@ -170,8 +166,7 @@ export const postService = {
 
     // 카테고리별 게시글 가져오기
     async getPostsByCategory(category: string) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('*')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
@@ -181,8 +176,7 @@ export const postService = {
 
     // 태그별 게시글 가져오기
     async getPostsByTag(tag: string) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('*')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
@@ -192,8 +186,7 @@ export const postService = {
 
     // 인기 게시글 가져오기 (조회수 기준)
     async getPopularPosts(limit: number = 5) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('*')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
@@ -203,8 +196,7 @@ export const postService = {
 
     // 최근 게시글 가져오기
     async getRecentPosts(limit: number = 5) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('id, title, created_at, slug, published_at')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
@@ -214,13 +206,12 @@ export const postService = {
 
     // 조회수 증가
     async incrementViewCount(postId: string) {
-        return await supabase.rpc('increment_view_count', { post_id: postId });
+        return await (supabase as any).rpc('increment_view_count', { post_id: postId });
     },
 
     // 이전글 가져오기 (현재 글보다 이전에 작성된 글)
     async getPrevPost(currentCreatedAt: string) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('id, title, slug, thumbnail_url')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
@@ -232,8 +223,7 @@ export const postService = {
 
     // 다음글 가져오기 (현재 글보다 이후에 작성된 글)
     async getNextPost(currentCreatedAt: string) {
-        return await supabase
-            .from('posts')
+        return await (supabase.from('posts') as any)
             .select('id, title, slug, thumbnail_url')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
@@ -245,10 +235,10 @@ export const postService = {
 
     // 관련 게시글 가져오기 (같은 카테고리 또는 태그)
     async getRelatedPosts(postId: string, category?: string, tags?: string[], limit: number = 3) {
-        let query = supabase
-            .from('posts')
-            .select('id, title, slug, thumbnail_url, created_at')
+        let query = (supabase.from('posts') as any)
+            .select('id, title, slug, thumbnail_url, published_at')
             .eq('status', 'published')
+            .lte('published_at', new Date().toISOString())
             .neq('id', postId);
 
         if (category) {
@@ -256,7 +246,7 @@ export const postService = {
         }
 
         return await query
-            .order('created_at', { ascending: false })
+            .order('published_at', { ascending: false })
             .limit(limit);
     }
 };

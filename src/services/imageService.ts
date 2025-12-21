@@ -97,8 +97,9 @@ export const imageService = {
                 });
 
             if (error) {
-                console.error('WebP 업로드 실패:', error);
-                return { url: '', path: '', error: error.message };
+                console.error('WebP 업로드 실패 (Supabase Error):', error);
+                const errorMsg = error.message === 'Object not found' ? 'Storage의 post-images 버킷을 찾을 수 없습니다.' : error.message;
+                return { url: '', path: '', error: errorMsg };
             }
 
             const { data: urlData } = supabase.storage
@@ -110,8 +111,8 @@ export const imageService = {
                 path: data.path
             };
         } catch (error: any) {
-            console.error('WebP 변환/업로드 오류:', error);
-            return { url: '', path: '', error: error.message };
+            console.error('WebP 변환/업로드 전체 프로세스 오류:', error);
+            return { url: '', path: '', error: `이미지 처리 중 치명적 오류: ${error.message}` };
         }
     },
 

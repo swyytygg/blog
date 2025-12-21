@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Save, Image as ImageIcon, Tag, Lock, Globe, Bold, Italic, Link, List, Quote, Code, Heading, Upload, Minus, ChevronDown, Calendar, Clock } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Tag, Lock, Globe, Bold, Italic, Link, List, Quote, Code, Heading, Upload, Minus, ChevronDown, Calendar, Clock, Lightbulb, Info } from 'lucide-react';
 import { postService, CreatePostInput, UpdatePostInput } from '../../services/postService';
 import { supabase } from '../../services/supabase';
 import { categoryService, Category } from '../../services/categoryService';
@@ -441,6 +441,9 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                                             >
                                                 <Upload size={18} />
                                             </button>
+                                            <div className="w-px h-4 bg-gray-300 mx-2"></div>
+                                            <button onClick={() => insertText('<div class="highlight-box">\n', '\n</div>')} className="p-2 hover:bg-blue-100 text-blue-600 rounded transition-colors" title="강조 박스"><Info size={18} /></button>
+                                            <button onClick={() => insertText('<div class="tip-box">\n', '\n</div>')} className="p-2 hover:bg-amber-100 text-amber-600 rounded transition-colors" title="팁 박스"><Lightbulb size={18} /></button>
                                             {uploadProgress && (
                                                 <span className="text-xs text-indigo-600 ml-2">{uploadProgress}</span>
                                             )}
@@ -567,6 +570,29 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                                             >
                                                 <Upload size={18} />
                                             </button>
+                                            <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                                            <button
+                                                onClick={() => {
+                                                    document.execCommand('insertHTML', false, '<div class="highlight-box"><p>강조할 내용을 입력하세요</p></div><p><br></p>');
+                                                    if (contentEditableRef.current) setContent(contentEditableRef.current.innerHTML);
+                                                }}
+                                                className="p-2 hover:bg-blue-100 text-blue-600 rounded transition-colors flex items-center gap-1"
+                                                title="강조 박스"
+                                            >
+                                                <Info size={16} />
+                                                <span className="text-xs font-bold">강조</span>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    document.execCommand('insertHTML', false, '<div class="tip-box"><p>팁 내용을 입력하세요</p></div><p><br></p>');
+                                                    if (contentEditableRef.current) setContent(contentEditableRef.current.innerHTML);
+                                                }}
+                                                className="p-2 hover:bg-amber-100 text-amber-600 rounded transition-colors flex items-center gap-1"
+                                                title="팁 박스"
+                                            >
+                                                <Lightbulb size={16} />
+                                                <span className="text-xs font-bold">팁</span>
+                                            </button>
                                             {uploadProgress && (
                                                 <span className="text-xs text-indigo-600 ml-2">{uploadProgress}</span>
                                             )}
@@ -650,101 +676,106 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                                     >
                                         <Globe size={16} /> 공개
                                     </button>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 발행 일시 (예약 발행) */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">발행 일시</label>
-                            <div className="space-y-2">
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                        <Calendar size={14} />
-                                    </div>
-                                    <input
-                                        type="datetime-local"
-                                        value={publishedAt}
-                                        onChange={(e) => setPublishedAt(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                                    />
+                                    <button
+                                        onClick={() => setIsPublished(false)}
+                                        className={`flex-1 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${!isPublished ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        <Lock size={16} /> 비공개
+                                    </button>
                                 </div>
-                                {new Date(publishedAt) > new Date() && (
-                                    <p className="text-[11px] text-indigo-600 font-medium flex items-center gap-1">
-                                        <Clock size={12} /> 예약 발행 예정입니다.
-                                    </p>
+                            </div>
+
+                            {/* 발행 일시 (예약 발행) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">발행 일시</label>
+                                <div className="space-y-2">
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            <Calendar size={14} />
+                                        </div>
+                                        <input
+                                            type="datetime-local"
+                                            value={publishedAt}
+                                            onChange={(e) => setPublishedAt(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                        />
+                                    </div>
+                                    {new Date(publishedAt) > new Date() && (
+                                        <p className="text-[11px] text-indigo-600 font-medium flex items-center gap-1">
+                                            <Clock size={12} /> 예약 발행 예정입니다.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 카테고리 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="">카테고리 선택</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* 슬러그 설정 추가 */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-medium text-gray-700">URL 슬러그 (경로)</label>
+                                    <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">SEO</span>
+                                </div>
+                                <div className="text-xs text-gray-500 mb-2 bg-gray-50 p-2 rounded border border-gray-100">
+                                    고정 페이지(이용약관 등)는 <code className="bg-gray-200 px-1 rounded">usage</code>, <code className="bg-gray-200 px-1 rounded">privacy</code> 등으로 입력하세요.
+                                </div>
+                                <input
+                                    type="text"
+                                    value={slug}
+                                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[\s]/g, '-'))}
+                                    placeholder="예: usage (비워두면 자동 생성)"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
+                                />
+                                {slug && <p className="text-[10px] text-gray-400 mt-1">최종 주소: /post/{slug}</p>}
+                            </div>
+
+                            {/* 썸네일 설정 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">썸네일</label>
+                                <div className="text-xs text-gray-500 mb-2 bg-blue-50 p-2 rounded border border-blue-100">
+                                    💡 <strong>자동 추출</strong>: 본문에 이미지가 있으면 첫 번째 이미지가 썸네일로 사용됩니다.
+                                    <br />
+                                    특정 이미지를 썸네일로 지정하려면 이미지의 <code className="bg-blue-100 px-1 rounded">alt</code>를 <code className="bg-blue-100 px-1 rounded">thumbnail</code>로 설정하세요.
+                                </div>
+                                <input
+                                    type="text"
+                                    value={thumbnailUrl}
+                                    onChange={(e) => setThumbnailUrl(e.target.value)}
+                                    placeholder="비워두면 본문에서 자동 추출"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                />
+                                {thumbnailUrl && (
+                                    <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 aspect-video">
+                                        <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                                    </div>
                                 )}
                             </div>
                         </div>
-
-                        {/* 카테고리 */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
-                            <select
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">카테고리 선택</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* 슬러그 설정 추가 */}
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="block text-sm font-medium text-gray-700">URL 슬러그 (경로)</label>
-                                <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">SEO</span>
-                            </div>
-                            <div className="text-xs text-gray-500 mb-2 bg-gray-50 p-2 rounded border border-gray-100">
-                                고정 페이지(이용약관 등)는 <code className="bg-gray-200 px-1 rounded">usage</code>, <code className="bg-gray-200 px-1 rounded">privacy</code> 등으로 입력하세요.
-                            </div>
-                            <input
-                                type="text"
-                                value={slug}
-                                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[\s]/g, '-'))}
-                                placeholder="예: usage (비워두면 자동 생성)"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
-                            />
-                            {slug && <p className="text-[10px] text-gray-400 mt-1">최종 주소: /post/{slug}</p>}
-                        </div>
-
-                        {/* 썸네일 설정 */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">썸네일</label>
-                            <div className="text-xs text-gray-500 mb-2 bg-blue-50 p-2 rounded border border-blue-100">
-                                💡 <strong>자동 추출</strong>: 본문에 이미지가 있으면 첫 번째 이미지가 썸네일로 사용됩니다.
-                                <br />
-                                특정 이미지를 썸네일로 지정하려면 이미지의 <code className="bg-blue-100 px-1 rounded">alt</code>를 <code className="bg-blue-100 px-1 rounded">thumbnail</code>로 설정하세요.
-                            </div>
-                            <input
-                                type="text"
-                                value={thumbnailUrl}
-                                onChange={(e) => setThumbnailUrl(e.target.value)}
-                                placeholder="비워두면 본문에서 자동 추출"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                            />
-                            {thumbnailUrl && (
-                                <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 aspect-video">
-                                    <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 숨겨진 파일 input (이미지 업로드용) */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileInputChange}
-                className="hidden"
-            />
-        </div>
+                {/* 숨겨진 파일 input (이미지 업로드용) */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                />
+            </div>
         </div >
     );
 };

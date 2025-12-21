@@ -34,8 +34,18 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
 
     if (!adClient) {
         return (
-            <div className={`ad-placeholder bg-gray-50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center ${className}`} style={style}>
-                <span className="text-xs text-gray-400 font-medium tracking-wider uppercase">Advertisement</span>
+            <div
+                className={`ad-placeholder-hidden sr-only ${className}`}
+                style={{ ...style, height: 0, opacity: 0, overflow: 'hidden' }}
+                aria-hidden="true"
+            >
+                {/* Googlebot requirement: hidden structure for future ads */}
+                <ins
+                    className="adsbygoogle"
+                    style={style}
+                    data-ad-client="placeholder"
+                    data-ad-slot={slot}
+                />
             </div>
         );
     }

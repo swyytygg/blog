@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { postService } from '../services/postService';
 import PostDetail from '../components/blog/PostDetail';
+import SEO from '../components/common/SEO';
 
 const PostView = () => {
     const { id } = useParams<{ id: string }>();
@@ -70,6 +71,14 @@ const PostView = () => {
 
     return (
         <div className="post-view">
+            <SEO
+                title={post.title}
+                description={post.description || post.content.substring(0, 160).replace(/<[^>]*>/g, '')}
+                image={post.thumbnail_url}
+                datePublished={post.published_at || post.created_at}
+                dateModified={post.updated_at}
+                authorName={post.profiles?.display_name}
+            />
             <PostDetail post={post} />
         </div>
     );

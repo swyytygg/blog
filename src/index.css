@@ -1,100 +1,51 @@
-/* Google Fonts: index.html에서 preload로 로딩됨 */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 238 84% 67%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 238 84% 67%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 238 84% 67%;
-    --radius: 0.75rem;
-
-    --sidebar-width: 288px;
-    --header-height: 56px;
-  }
+:root {
+  --primary: #4f46e5;
+  --secondary: #6366f1;
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-semibold;
+    @apply text-gray-900 bg-gray-50 font-sans;
   }
 }
 
-@layer components {
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
 
-  /* 사이드바 스크롤바 */
-  .tistory-sidebar::-webkit-scrollbar {
-    width: 6px;
-  }
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
 
-  .tistory-sidebar::-webkit-scrollbar-track {
-    background: transparent;
-  }
+::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 4px;
+}
 
-  .tistory-sidebar::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
-    border-radius: 3px;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
+}
 
-  /* 애니메이션 클래스 */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-  }
+/* Animations */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
 
-  .animate-fade-in-up {
-    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
 
-  .animate-slide-down {
-    animation: slideDown 0.3s ease-out forwards;
-  }
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out forwards;
+}
 
-  /* 이미지 호버 최적화 */
-  .img-hover-zoom {
-    @apply overflow-hidden transition-transform duration-500 will-change-transform;
-  }
-
-  .img-hover-zoom:hover {
-    @apply scale-105;
-  }
-
-  .content-container {
-    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
-  }
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
 }
 
 /* Keyframes */
@@ -140,27 +91,23 @@
 
 /* Prose (Post Content) Styles */
 .prose {
-  @apply text-gray-700 leading-relaxed text-[1.05rem];
+  @apply text-gray-700 leading-[1.85] text-[1.1rem];
 }
 
 .prose h1 {
-  @apply text-3xl font-bold mt-12 mb-6 text-gray-900 border-b pb-4;
+  @apply text-3xl font-extrabold text-gray-900 mt-12 mb-6 border-b-2 border-indigo-500 pb-4;
 }
 
 .prose h2 {
-  @apply text-2xl font-bold mt-10 mb-5 text-gray-900;
+  @apply text-2xl font-bold text-gray-800 mt-10 mb-5 border-l-4 border-indigo-500 pl-4;
 }
 
 .prose h3 {
-  @apply text-xl font-semibold mt-8 mb-4 text-gray-900;
+  @apply text-xl font-bold text-gray-800 mt-8 mb-4;
 }
 
 .prose h4 {
   @apply text-lg font-semibold mt-6 mb-3 text-gray-900;
-}
-
-.prose h5 {
-  @apply text-base font-semibold mt-4 mb-2 text-gray-900;
 }
 
 .prose p {
@@ -183,13 +130,9 @@
   @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-indigo-600;
 }
 
-.prose img {
-  @apply rounded-2xl my-10 shadow-md mx-auto max-w-full h-auto;
-}
-
 .prose ul,
 .prose ol {
-  @apply mb-6 pl-6 space-y-2;
+  @apply my-6 pl-6 space-y-2;
 }
 
 .prose ul {
@@ -198,6 +141,60 @@
 
 .prose ol {
   @apply list-decimal;
+}
+
+.prose li {
+  @apply mb-2;
+}
+
+/* Table Styles */
+.prose table {
+  @apply w-full border-collapse my-8 rounded-xl overflow-hidden shadow-sm border border-gray-100;
+}
+
+.prose thead {
+  @apply bg-gradient-to-r from-indigo-600 to-indigo-500 text-white;
+}
+
+.prose th {
+  @apply p-4 text-left font-semibold;
+}
+
+.prose td {
+  @apply p-4 border-b border-gray-50 text-gray-600;
+}
+
+.prose tr:last-child td {
+  @apply border-b-0;
+}
+
+.prose tr:hover td {
+  @apply bg-indigo-50/30;
+}
+
+/* Custom Boxes (From User Design) */
+.highlight-box {
+  @apply my-8 p-8 rounded-2xl border-l-[6px] border-indigo-500 shadow-sm relative overflow-hidden;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+}
+
+.highlight-box::before {
+  content: "💡";
+  @apply absolute top-4 right-4 text-2xl opacity-20;
+}
+
+.tip-box {
+  @apply my-8 p-8 rounded-2xl border-l-[6px] border-amber-500 shadow-sm relative overflow-hidden;
+  background: linear-gradient(135deg, #fffbeb 0%, #fffaff 100%);
+}
+
+.tip-box::before {
+  content: "📝";
+  @apply absolute top-4 right-4 text-2xl opacity-20;
+}
+
+.prose img {
+  @apply rounded-2xl my-10 shadow-lg mx-auto max-w-full h-auto transition-transform duration-300 hover:scale-[1.01];
 }
 
 /* AdSense Placeholder Styles */

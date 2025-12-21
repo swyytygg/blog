@@ -13,10 +13,10 @@ export interface GuestbookEntry {
 }
 
 export interface CreateGuestbookEntryInput {
-    author_name: string;
+    author_name?: string;
     author_email?: string;
-    password: string; // 수정/삭제용 비밀번호
-    content: string;
+    password?: string; // 수정/삭제용 비밀번호 (선택)
+    content?: string;
     is_private?: boolean;
     parent_id?: string;
 }
@@ -27,13 +27,13 @@ export const guestbookService = {
         const offset = (page - 1) * limit;
 
         // 총 개수 먼저 가져오기
-        const { count } = await supabase
+        const { count } = await (supabase as any)
             .from('guestbook')
             .select('*', { count: 'exact', head: true })
             .is('parent_id', null);
 
         // 본문 가져오기 (부모 항목만)
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('guestbook')
             .select('*')
             .is('parent_id', null)
@@ -45,8 +45,8 @@ export const guestbookService = {
         // 각 항목의 답글 가져오기
         if (data && data.length > 0) {
             const entriesWithReplies = await Promise.all(
-                data.map(async (entry) => {
-                    const { data: replies } = await supabase
+                data.map(async (entry: any) => {
+                    const { data: replies } = await (supabase as any)
                         .from('guestbook')
                         .select('*')
                         .eq('parent_id', entry.id)
@@ -70,17 +70,17 @@ export const guestbookService = {
         return { data, error: null, count: count || 0, totalPages: Math.ceil((count || 0) / limit) };
     },
 
-    // 방명록 작성
     async createEntry(input: CreateGuestbookEntryInput) {
         const { password, ...entryData } = input;
 
-        // 비밀번호 해싱 (간단한 방식, 실제로는 bcrypt 등 사용 권장)
-        const hashedPassword = btoa(password);
+        // 비밀번호 해싱
+        const hashedPassword = password ? btoa(password) : null;
 
-        return await supabase
+        return await (supabase as any)
             .from('guestbook')
             .insert({
                 ...entryData,
+                author_name: entryData.author_name || '익명',
                 password_hash: hashedPassword,
                 is_private: entryData.is_private || false,
                 is_admin_reply: false
@@ -90,19 +90,24 @@ export const guestbookService = {
     },
 
     // 방명록 수정
-    async updateEntry(id: string, content: string, password: string) {
-        // 비밀번호 확인
-        const { data: entry } = await supabase
-            .from('guestbook')
-            .select('password_hash')
-            .eq('id', id)
-            .single();
+    async updateEntry(id: string, content: string, password?: string) {
+        // 관리자 세션 확인
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (!entry || entry.password_hash !== btoa(password)) {
-            return { data: null, error: new Error('비밀번호가 일치하지 않습니다.') };
+        if (!session) {
+            // 비밀번호 확인
+            const { data: entry } = await (supabase as any)
+                .from('guestbook')
+                .select('password_hash')
+                .eq('id', id)
+                .single();
+
+            if (!entry || !password || entry.password_hash !== btoa(password)) {
+                return { data: null, error: new Error('비밀번호가 일치하지 않습니다.') };
+            }
         }
 
-        return await supabase
+        return await (supabase as any)
             .from('guestbook')
             .update({ content, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -111,33 +116,38 @@ export const guestbookService = {
     },
 
     // 방명록 삭제
-    async deleteEntry(id: string, password: string) {
-        // 비밀번호 확인
-        const { data: entry } = await supabase
-            .from('guestbook')
-            .select('password_hash')
-            .eq('id', id)
-            .single();
+    async deleteEntry(id: string, password?: string) {
+        // 관리자 세션 확인
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (!entry || entry.password_hash !== btoa(password)) {
-            return { data: null, error: new Error('비밀번호가 일치하지 않습니다.') };
+        if (!session) {
+            // 비밀번호 확인
+            const { data: entry } = await (supabase as any)
+                .from('guestbook')
+                .select('password_hash')
+                .eq('id', id)
+                .single();
+
+            if (!entry || !password || entry.password_hash !== btoa(password)) {
+                return { data: null, error: new Error('비밀번호가 일치하지 않습니다.') };
+            }
         }
 
         // 답글도 함께 삭제
-        await supabase
+        await (supabase as any)
             .from('guestbook')
             .delete()
             .eq('parent_id', id);
 
-        return await supabase
+        return await (supabase as any)
             .from('guestbook')
             .delete()
             .eq('id', id);
     },
 
-    // 관리자 답글 작성
+    // 관리자 세션 작성
     async createAdminReply(parentId: string, content: string) {
-        return await supabase
+        return await (supabase as any)
             .from('guestbook')
             .insert({
                 author_name: '관리자',
@@ -148,5 +158,10 @@ export const guestbookService = {
             })
             .select()
             .single();
+    },
+
+    // 세션 확인 (관리자 여부 체크용)
+    async checkSession() {
+        return await supabase.auth.getSession();
     }
 };

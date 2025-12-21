@@ -1,24 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../utils/dateFormat';
-import {
-    Calendar,
-    Clock,
-    Eye,
-    MessageCircle,
-    ChevronLeft,
-    ChevronRight,
-    Home,
-    Tag,
-    Share2,
-    Facebook,
-    Twitter,
-    Link2,
-    Copy,
-    List
-} from 'lucide-react';
+import { Share2, Tag, Calendar, Eye, Clock, MessageCircle, ChevronRight, ChevronLeft, Home, List, Facebook, Twitter, Link2, Copy, ArrowLeft } from 'lucide-react';
 import { postService } from '../../services/postService';
 import CommentSection from './CommentSection';
+import GoogleAd from '../common/GoogleAd';
 
 interface PostDetailProps {
     post: any;
@@ -39,13 +25,13 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
     const [activeHeading, setActiveHeading] = useState<string>('');
     const [copied, setCopied] = useState(false);
 
-    // 이전/다음 글 로드
     useEffect(() => {
         const loadAdjacentPosts = async () => {
-            if (post?.created_at) {
+            const dateToUse = post.published_at || post.created_at;
+            if (dateToUse) {
                 const [prevResult, nextResult] = await Promise.all([
-                    postService.getPrevPost(post.created_at),
-                    postService.getNextPost(post.created_at)
+                    postService.getPrevPost(dateToUse),
+                    postService.getNextPost(dateToUse)
                 ]);
 
                 if (prevResult.data) setPrevPost(prevResult.data);
@@ -53,7 +39,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
             }
         };
         loadAdjacentPosts();
-    }, [post?.created_at]);
+    }, [post.published_at, post.created_at]);
 
     // 목차 생성
     const tableOfContents = useMemo((): TocItem[] => {
@@ -181,9 +167,8 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
     };
 
     return (
-    return (
-        <div className="max-w-5xl mx-auto px-10 sm:px-12 lg:px-16 py-8">
-            <article className="post-detail">
+        <div className="max-w-[95%] mx-auto px-4 sm:px-8 lg:px-12 py-8">
+            <article className="post-detail bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-12 lg:p-16">
                 {/* 브레드크럼 */}
                 <nav className="breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6">
                     <Link to="/" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
@@ -249,12 +234,13 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                         {/* 작성일 */}
                         <div className="flex items-center gap-1">
                             <Calendar size={14} />
-                            <span>{formatDate(post.created_at)}</span>
+                            <span>{formatDate(post.published_at || post.created_at)}</span>
                         </div>
 
                         {/* 수정일 */}
-                        {post.updated_at && post.updated_at !== post.created_at && (
+                        {post.updated_at && post.updated_at !== (post.published_at || post.created_at) && (
                             <div className="flex items-center gap-1 text-gray-400">
+                                <Calendar size={14} className="opacity-0" /> {/* 간격 맞추기용 */}
                                 <Clock size={14} />
                                 <span>수정 {formatDate(post.updated_at)}</span>
                             </div>
@@ -289,9 +275,8 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                     )}
                 </header>
 
-                {/* 메인 콘텐츠 영역 */}
-                <div className="flex gap-8">
-                    {/* 본문 */}
+                <div className="lg:flex lg:gap-16">
+                    {/* 본문 영역 - 75% (lg:w-3/4) */}
                     <div className="flex-1 min-w-0">
                         {/* CSS for Tables and Tistory Images */}
                         <style>{`
@@ -304,7 +289,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                             .tistory-image-caption { font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; }
                         `}</style>
                         <div
-                            className="prose prose-lg max-w-none"
+                            className="prose prose-lg max-w-none lg:mx-0"
                             dangerouslySetInnerHTML={{
                                 __html: contentWithIds.replace(
                                     /\[##_Image\|kage@(.*?)\|(.*?)\|(.*?)_##\]/g,
@@ -335,23 +320,11 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                         />
 
                         {/* 본문 하단 광고 영역 - 구글 애드센스용 */}
-                        <aside
-                            className="content-ad-section mt-8 pt-6 border-t border-gray-200"
-                            aria-label="광고"
-                            data-ad-slot="content-bottom"
-                        >
-                            {/* 구글 애드센스 자동 광고가 이 영역을 인식합니다 */}
-                            <div
-                                className="ad-placeholder bg-gray-50 rounded-lg p-6 text-center min-h-[100px] flex items-center justify-center"
-                                data-google-ad-client="placeholder"
-                                data-ad-format="auto"
-                                data-full-width-responsive="true"
-                            >
-                                <span className="text-xs text-gray-400">
-                                    광고 영역
-                                </span>
-                            </div>
-                        </aside>
+                        <GoogleAd
+                            slot="content-bottom-ad"
+                            format="auto"
+                            className="mt-8 pt-6 border-t border-gray-200"
+                        />
 
                         {/* 태그 */}
                         {post.tags && post.tags.length > 0 && (
@@ -498,19 +471,28 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                         </nav>
                     </div>
 
-                    {/* 목차 (데스크톱에서만 표시) */}
-                    {tableOfContents.length > 0 && (
-                        <aside className="hidden xl:block w-64 flex-shrink-0">
-                            <div className="sticky top-24">
-                                <div className="bg-gray-50 rounded-xl p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <List size={16} />
-                                            목차
-                                        </h3>
-                                    </div>
+                    {/* 사이드바 영역 - 25% (lg:w-1/4, min-w-80) */}
+                    <aside className="hidden lg:block w-80 flex-shrink-0">
+                        <div className="sticky top-24 space-y-8">
+                            {/* 사이드바 광고 영역 - 구글봇을 위해 DOM에 유지하되 승인 전까지는 사용자에게 숨김 */}
+                            <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 ${!import.meta.env.VITE_GOOGLE_ADSENSE_ID ? 'sr-only h-0 overflow-hidden opacity-0' : ''}`}>
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-center">Advertisement</h3>
+                                <GoogleAd
+                                    slot="sidebar-ad"
+                                    format="fluid"
+                                    style={{ display: 'block', minHeight: '300px' }}
+                                />
+                            </div>
+
+                            {/* 목차 */}
+                            {tableOfContents.length > 0 && (
+                                <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                                    <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-4">
+                                        <List size={16} />
+                                        목차
+                                    </h3>
                                     <nav className="toc-list">
-                                        <ul className="space-y-2 text-sm">
+                                        <ul className="space-y-3 text-sm">
                                             {tableOfContents.map((item) => (
                                                 <li
                                                     key={item.id}
@@ -518,8 +500,8 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                                                 >
                                                     <button
                                                         onClick={() => scrollToHeading(item.id)}
-                                                        className={`text-left w-full py-1 transition-colors line-clamp-2 ${activeHeading === item.id
-                                                            ? 'text-indigo-600 font-medium'
+                                                        className={`text-left w-full transition-colors line-clamp-2 ${activeHeading === item.id
+                                                            ? 'text-indigo-600 font-bold'
                                                             : 'text-gray-600 hover:text-indigo-600'
                                                             }`}
                                                     >
@@ -530,23 +512,24 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                                         </ul>
                                     </nav>
                                 </div>
-                            </div>
-                        </aside>
-                    )}
+                            )}
+                        </div>
+                    </aside>
+                </div>
+
+                {/* 홈 버튼 위치 이동: 글 네비게이션과 댓글 섹션 사이 */}
+                <div className="flex justify-center mt-12 mb-4">
+                    <Link
+                        to="/"
+                        className="inline-flex items-center gap-2 px-8 py-2.5 bg-white text-indigo-600 hover:bg-indigo-50 rounded-full transition-all border-2 border-indigo-500 shadow-md font-medium"
+                    >
+                        <ArrowLeft size={16} />
+                        처음으로 돌아가기
+                    </Link>
                 </div>
 
                 {/* 댓글 섹션 */}
                 {post.id && <CommentSection postId={post.id} />}
-
-                <div className="mt-16 text-center border-t border-gray-100 pt-10 pb-10">
-                    <Link
-                        to="/"
-                        className="inline-flex items-center gap-2 px-10 py-3 bg-indigo-600 text-white font-semibold rounded-full hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                    >
-                        <Home size={18} />
-                        메인으로 돌아가기
-                    </Link>
-                </div>
             </article>
         </div >
     );

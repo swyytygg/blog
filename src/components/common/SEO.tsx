@@ -8,6 +8,9 @@ interface SEOProps {
     description?: string;
     image?: string;
     url?: string;
+    datePublished?: string;
+    dateModified?: string;
+    authorName?: string;
 }
 
 const SEO: React.FC<SEOProps> = ({
@@ -15,7 +18,10 @@ const SEO: React.FC<SEOProps> = ({
     siteTitleOverride,
     description = blogConfig.description,
     image,
-    url
+    url,
+    datePublished,
+    dateModified,
+    authorName = blogConfig.author || 'FREESIA'
 }) => {
     const siteTitle = siteTitleOverride || blogConfig.title;
     const finalTitle = !title || title === siteTitle ? siteTitle : `${title} | ${siteTitle}`;
@@ -39,6 +45,8 @@ const SEO: React.FC<SEOProps> = ({
             <meta property="og:description" content={description} />
             <meta property="og:site_name" content={siteTitle} />
             {image && <meta property="og:image" content={image} />}
+            {datePublished && <meta property="article:published_time" content={datePublished} />}
+            {dateModified && <meta property="article:modified_time" content={dateModified} />}
 
             {/* Twitter */}
             <meta property="twitter:card" content="summary_large_image" />
@@ -68,6 +76,7 @@ const SEO: React.FC<SEOProps> = ({
             )}
 
             {/* Naver Analytics */}
+            {/* Naver Analytics */}
             {naverId && (
                 <script type="text/javascript" src="//wcs.naver.net/wcslog.js"></script>
             )}
@@ -82,6 +91,35 @@ const SEO: React.FC<SEOProps> = ({
                     `}
                 </script>
             )}
+
+            {/* 구조화된 데이터 (JSON-LD) */}
+            <script type="application/ld+json">
+                {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "BlogPosting",
+                    "headline": title || siteTitle,
+                    "description": description,
+                    "image": image || undefined,
+                    "datePublished": datePublished || undefined,
+                    "dateModified": dateModified || datePublished || undefined,
+                    "author": {
+                        "@type": "Person",
+                        "name": authorName
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": siteTitle,
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": blogConfig.profileImage || undefined
+                        }
+                    },
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": currentUrl
+                    }
+                })}
+            </script>
         </Helmet>
     );
 };
