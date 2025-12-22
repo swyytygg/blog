@@ -10,7 +10,7 @@ interface PostListProps {
 
 const PostList: React.FC<PostListProps> = ({
     posts,
-    postsPerPage = 6,
+    postsPerPage = 12,
     showViewToggle = true
 }) => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -82,8 +82,8 @@ const PostList: React.FC<PostListProps> = ({
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-indigo-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                             aria-label="그리드 보기"
                         >
@@ -92,8 +92,8 @@ const PostList: React.FC<PostListProps> = ({
                         <button
                             onClick={() => setViewMode('list')}
                             className={`p-2 rounded-md transition-colors ${viewMode === 'list'
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-indigo-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                             aria-label="리스트 보기"
                         >
@@ -106,7 +106,7 @@ const PostList: React.FC<PostListProps> = ({
             {/* 포스트 그리드/리스트 */}
             <div className={
                 viewMode === 'grid'
-                    ? 'grid gap-6 sm:grid-cols-2 lg:grid-cols-2'
+                    ? 'grid gap-6 sm:grid-cols-2 lg:grid-cols-4'
                     : 'flex flex-col gap-4'
             }>
                 {currentPosts.map((post) => (
@@ -126,8 +126,8 @@ const PostList: React.FC<PostListProps> = ({
                         onClick={() => goToPage(currentPage - 1)}
                         disabled={currentPage === 1}
                         className={`p-2 rounded-lg transition-colors ${currentPage === 1
-                                ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-gray-600 hover:bg-gray-100'
+                            ? 'text-gray-300 cursor-not-allowed'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
                         aria-label="이전 페이지"
                     >
@@ -145,8 +145,8 @@ const PostList: React.FC<PostListProps> = ({
                                 key={page}
                                 onClick={() => goToPage(page as number)}
                                 className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-gray-600 hover:bg-gray-100'
                                     }`}
                             >
                                 {page}
@@ -159,8 +159,8 @@ const PostList: React.FC<PostListProps> = ({
                         onClick={() => goToPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className={`p-2 rounded-lg transition-colors ${currentPage === totalPages
-                                ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-gray-600 hover:bg-gray-100'
+                            ? 'text-gray-300 cursor-not-allowed'
+                            : 'text-gray-600 hover:bg-gray-100'
                             }`}
                         aria-label="다음 페이지"
                     >

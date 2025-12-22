@@ -29,17 +29,21 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
         const loadAdjacentPosts = async () => {
             const dateToUse = post.published_at || post.created_at;
             if (dateToUse) {
+                const isNotice = post.category === '공지사항';
                 const [prevResult, nextResult] = await Promise.all([
-                    postService.getPrevPost(dateToUse),
-                    postService.getNextPost(dateToUse)
+                    postService.getPrevPost(dateToUse, isNotice),
+                    postService.getNextPost(dateToUse, isNotice)
                 ]);
 
                 if (prevResult.data) setPrevPost(prevResult.data);
+                else setPrevPost(null); // 결과가 없으면 명시적으로 null 처리
+
                 if (nextResult.data) setNextPost(nextResult.data);
+                else setNextPost(null);
             }
         };
         loadAdjacentPosts();
-    }, [post.published_at, post.created_at]);
+    }, [post.id, post.published_at, post.created_at, post.category]);
 
     // 목차 생성
     const tableOfContents = useMemo((): TocItem[] => {
@@ -269,6 +273,8 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                             <img
                                 src={post.thumbnail_url}
                                 alt={post.title}
+                                fetchPriority="high"
+                                decoding="sync"
                                 className="w-full h-auto object-cover"
                             />
                         </div>

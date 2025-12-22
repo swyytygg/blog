@@ -6,7 +6,8 @@ export interface Post {
     slug: string;
     content: string;
     content_type?: 'markdown' | 'html';
-    description?: string;
+    description?: string; // For backward compatibility/UI
+    excerpt?: string;     // Actual DB column
     thumbnail_url?: string | null;
     category?: string;
     category_id?: string | null;
@@ -36,6 +37,7 @@ export interface CreatePostInput {
     category?: string;
     tags?: string[];
     thumbnail_url?: string;
+    excerpt?: string;
     author_id: string;
     is_published: boolean;
     published_at?: string; // 추가
@@ -49,6 +51,7 @@ export interface UpdatePostInput {
     category?: string;
     tags?: string[];
     thumbnail_url?: string;
+    excerpt?: string;
     is_published?: boolean;
     published_at?: string; // 추가
 }
@@ -130,13 +133,13 @@ export const postService = {
         let query = (supabase.from('posts') as any)
             .select('*')
             .eq('status', 'published')
-            .lte('published_at', new Date().toISOString());
+            .lte('published_at', new Date().toISOString())
+            .neq('category', '공지사항'); // 공지사항 제외
 
         // 텍스트 검색 (제목, 설명, 내용)
         if (params.query) {
-            // Supabase full-text search 또는 ilike 사용
             query = query.or(
-                `title.ilike.%${params.query}%,description.ilike.%${params.query}%,content.ilike.%${params.query}%`
+                `title.ilike.%${params.query}%,excerpt.ilike.%${params.query}%,content.ilike.%${params.query}%`
             );
         }
 
@@ -180,6 +183,7 @@ export const postService = {
             .select('*')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
+            .neq('category', '공지사항') // 공지사항 제외
             .contains('tags', [tag])
             .order('published_at', { ascending: false });
     },
@@ -190,6 +194,7 @@ export const postService = {
             .select('*')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
+            .neq('category', '공지사항') // 공지사항 제외
             .order('view_count', { ascending: false })
             .limit(limit);
     },
@@ -200,6 +205,7 @@ export const postService = {
             .select('id, title, created_at, slug, published_at')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
+            .neq('category', '공지사항') // 공지사항 제외
             .order('published_at', { ascending: false })
             .limit(limit);
     },
@@ -210,24 +216,40 @@ export const postService = {
     },
 
     // 이전글 가져오기 (현재 글보다 이전에 작성된 글)
-    async getPrevPost(currentCreatedAt: string) {
-        return await (supabase.from('posts') as any)
+    async getPrevPost(currentCreatedAt: string, isNotice: boolean = false) {
+        let query = (supabase.from('posts') as any)
             .select('id, title, slug, thumbnail_url')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
-            .lt('published_at', currentCreatedAt)
+            .lt('published_at', currentCreatedAt);
+
+        if (isNotice) {
+            query = query.eq('category', '공지사항');
+        } else {
+            query = query.neq('category', '공지사항');
+        }
+
+        return await query
             .order('published_at', { ascending: false })
             .limit(1)
             .single();
     },
 
     // 다음글 가져오기 (현재 글보다 이후에 작성된 글)
-    async getNextPost(currentCreatedAt: string) {
-        return await (supabase.from('posts') as any)
+    async getNextPost(currentCreatedAt: string, isNotice: boolean = false) {
+        let query = (supabase.from('posts') as any)
             .select('id, title, slug, thumbnail_url')
             .eq('status', 'published')
             .lte('published_at', new Date().toISOString())
-            .gt('published_at', currentCreatedAt)
+            .gt('published_at', currentCreatedAt);
+
+        if (isNotice) {
+            query = query.eq('category', '공지사항');
+        } else {
+            query = query.neq('category', '공지사항');
+        }
+
+        return await query
             .order('published_at', { ascending: true })
             .limit(1)
             .single();

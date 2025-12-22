@@ -73,7 +73,7 @@ const PostView = () => {
         <div className="post-view">
             <SEO
                 title={post.title}
-                description={post.description || post.content.substring(0, 160).replace(/<[^>]*>/g, '')}
+                description={post.excerpt || post.description || post.content.substring(0, 160).replace(/<[^>]*>/g, '')}
                 image={post.thumbnail_url}
                 datePublished={post.published_at || post.created_at}
                 dateModified={post.updated_at}

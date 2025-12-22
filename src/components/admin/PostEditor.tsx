@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Save, Image as ImageIcon, Tag, Lock, Globe, Bold, Italic, Link, List, Quote, Code, Heading, Upload, Minus, ChevronDown, Calendar, Clock, Lightbulb, Info } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Tag, Lock, Globe, Bold, Italic, Link, List, Quote, Code, Heading, Upload, Minus, ChevronDown, Calendar, Clock, Lightbulb, Info, Layout as LayoutIcon } from 'lucide-react';
 import { postService, CreatePostInput, UpdatePostInput } from '../../services/postService';
 import { supabase } from '../../services/supabase';
 import { categoryService, Category } from '../../services/categoryService';
 import { imageService, extractThumbnailFromContent } from '../../services/imageService';
+import { templateService, Template } from '../../services/templateService';
 
 interface PostEditorProps {
     post: any;
@@ -17,6 +18,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
     const [category, setCategory] = useState('');
     const [slug, setSlug] = useState(''); // 슬러그 상태 추가
     const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const [excerpt, setExcerpt] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [isPublished, setIsPublished] = useState(true);
@@ -39,11 +41,20 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
     // 카테고리 목록
     const [categories, setCategories] = useState<Category[]>([]);
 
+    // 서식 목록
+    const [templates, setTemplates] = useState<Template[]>([]);
+    const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+
 
     useEffect(() => {
         // 카테고리 로드
         categoryService.getAllCategories().then(res => {
             if (res.data) setCategories(res.data);
+        });
+
+        // 서식 로드
+        templateService.getTemplates().then(res => {
+            if (res.data) setTemplates(res.data);
         });
 
         // 수정 모드일 때 데이터 채우기
@@ -53,6 +64,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
             setCategory(post.category || '');
             setSlug(post.slug || ''); // 기존 슬러그 로드
             setThumbnailUrl(post.thumbnail_url || '');
+            setExcerpt(post.excerpt || post.description || '');
             setTags(post.tags || []);
             setIsPublished(post.is_published ?? true);
             setEditorMode(post.content_type || 'markdown'); // 기존 글은 마크다운으로 간주
@@ -217,6 +229,32 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
         }
     }, [handleImageUpload]);
 
+    /**
+     * 서식 적용
+     */
+    const applyTemplate = useCallback((template: Template) => {
+        if (!confirm(`"${template.name}" 서식을 적용하시겠습니까?`)) return;
+
+        if (editorMode === 'basic') {
+            // contentEditable에 서식 삽입
+            document.execCommand('insertHTML', false, template.content);
+            if (contentEditableRef.current) {
+                setContent(contentEditableRef.current.innerHTML);
+            }
+        } else {
+            // 마크다운/HTML 모드
+            const textarea = textareaRef.current;
+            if (textarea) {
+                const start = textarea.selectionStart;
+                const newContent = content.substring(0, start) + template.content + content.substring(start);
+                setContent(newContent);
+            } else {
+                setContent(prev => prev + '\n' + template.content);
+            }
+        }
+        setShowTemplateMenu(false);
+    }, [editorMode, content]);
+
     // ==================== 기존 함수들 ====================
 
     const handleTagKeyDown = (e: React.KeyboardEvent) => {
@@ -296,6 +334,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                     category,
                     slug: slug.trim() || post.slug, // 슬러그 업데이트 유연하게
                     thumbnail_url: finalThumbnailUrl,
+                    excerpt: excerpt,
                     tags,
                     is_published: isPublished,
                     published_at: new Date(publishedAt).toISOString(), // 예약 날짜 추가
@@ -313,6 +352,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                     content,
                     category,
                     thumbnail_url: finalThumbnailUrl,
+                    excerpt: excerpt,
                     tags,
                     author_id: authorId,
                     slug: finalSlug,
@@ -444,6 +484,38 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                                             <div className="w-px h-4 bg-gray-300 mx-2"></div>
                                             <button onClick={() => insertText('<div class="highlight-box">\n', '\n</div>')} className="p-2 hover:bg-blue-100 text-blue-600 rounded transition-colors" title="강조 박스"><Info size={18} /></button>
                                             <button onClick={() => insertText('<div class="tip-box">\n', '\n</div>')} className="p-2 hover:bg-amber-100 text-amber-600 rounded transition-colors" title="팁 박스"><Lightbulb size={18} /></button>
+
+                                            <div className="w-px h-4 bg-gray-300 mx-2"></div>
+
+                                            {/* 서식 메뉴 */}
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowTemplateMenu(!showTemplateMenu)}
+                                                    className="p-2 hover:bg-gray-200 rounded transition-colors flex items-center gap-1 text-indigo-600 font-bold text-xs"
+                                                    title="서식 불러오기"
+                                                >
+                                                    <LayoutIcon size={18} />
+                                                    <span>서식</span>
+                                                </button>
+                                                {showTemplateMenu && (
+                                                    <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[1000] min-w-[200px]">
+                                                        <div className="px-4 py-2 border-b text-[10px] font-bold text-gray-400 uppercase tracking-widest">저장된 서식</div>
+                                                        {templates.length > 0 ? templates.map(t => (
+                                                            <button
+                                                                key={t.id}
+                                                                onClick={() => applyTemplate(t)}
+                                                                className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex flex-col gap-0.5 border-b border-gray-50 last:border-0"
+                                                            >
+                                                                <span className="text-sm font-bold text-gray-800">{t.name}</span>
+                                                                {t.description && <span className="text-[10px] text-gray-500 line-clamp-1">{t.description}</span>}
+                                                            </button>
+                                                        )) : (
+                                                            <div className="px-4 py-4 text-xs text-gray-400 text-center">등록된 서식이 없습니다.</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             {uploadProgress && (
                                                 <span className="text-xs text-indigo-600 ml-2">{uploadProgress}</span>
                                             )}
@@ -593,6 +665,38 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                                                 <Lightbulb size={16} />
                                                 <span className="text-xs font-bold">팁</span>
                                             </button>
+
+                                            <div className="w-px h-4 bg-gray-300 mx-1"></div>
+
+                                            {/* 서식 메뉴 */}
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowTemplateMenu(!showTemplateMenu)}
+                                                    className="p-2 hover:bg-gray-200 rounded transition-colors flex items-center gap-1 text-indigo-600 font-bold text-xs"
+                                                    title="서식 불러오기"
+                                                >
+                                                    <LayoutIcon size={18} />
+                                                    <span>서식</span>
+                                                </button>
+                                                {showTemplateMenu && (
+                                                    <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[1000] min-w-[200px]">
+                                                        <div className="px-4 py-2 border-b text-[10px] font-bold text-gray-400 uppercase tracking-widest">저장된 서식</div>
+                                                        {templates.length > 0 ? templates.map(t => (
+                                                            <button
+                                                                key={t.id}
+                                                                onClick={() => applyTemplate(t)}
+                                                                className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex flex-col gap-0.5 border-b border-gray-50 last:border-0"
+                                                            >
+                                                                <span className="text-sm font-bold text-gray-800">{t.name}</span>
+                                                                {t.description && <span className="text-[10px] text-gray-500 line-clamp-1">{t.description}</span>}
+                                                            </button>
+                                                        )) : (
+                                                            <div className="px-4 py-4 text-xs text-gray-400 text-center">등록된 서식이 없습니다.</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             {uploadProgress && (
                                                 <span className="text-xs text-indigo-600 ml-2">{uploadProgress}</span>
                                             )}
@@ -742,26 +846,36 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onClose, onSave }) => {
                                 {slug && <p className="text-[10px] text-gray-400 mt-1">최종 주소: /post/{slug}</p>}
                             </div>
 
-                            {/* 썸네일 설정 */}
+                            {/* 메타 스크립트 & 스니펫 (구 썸네일) */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">썸네일</label>
-                                <div className="text-xs text-gray-500 mb-2 bg-blue-50 p-2 rounded border border-blue-100">
-                                    💡 <strong>자동 추출</strong>: 본문에 이미지가 있으면 첫 번째 이미지가 썸네일로 사용됩니다.
-                                    <br />
-                                    특정 이미지를 썸네일로 지정하려면 이미지의 <code className="bg-blue-100 px-1 rounded">alt</code>를 <code className="bg-blue-100 px-1 rounded">thumbnail</code>로 설정하세요.
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-medium text-gray-700">메타 스크립트 & 스니펫</label>
+                                    <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Snippet</span>
                                 </div>
+                                <div className="text-xs text-gray-500 mb-2 bg-indigo-50 p-2 rounded border border-indigo-100 italic">
+                                    💡 여기에 작성한 내용은 글 목록 카드의 이미지 자리에 파스텔 배경과 함께 표시됩니다.
+                                </div>
+                                <textarea
+                                    value={excerpt}
+                                    onChange={(e) => setExcerpt(e.target.value)}
+                                    placeholder="카드 이미지 자리에 보일 간단한 설명을 입력하세요..."
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
+                                />
+                            </div>
+
+                            {/* 썸네일 URL (필요시 수동 입력) */}
+                            <div className="opacity-60 hover:opacity-100 transition-opacity">
+                                <label className="block text-[11px] font-medium text-gray-500 mb-1 flex items-center gap-1">
+                                    <ImageIcon size={10} /> 썸네일 이미지 URL (선택사항)
+                                </label>
                                 <input
                                     type="text"
                                     value={thumbnailUrl}
                                     onChange={(e) => setThumbnailUrl(e.target.value)}
-                                    placeholder="비워두면 본문에서 자동 추출"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                    placeholder="이미지로 표시하고 싶을 때만 입력"
+                                    className="w-full px-3 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-400 text-[11px]"
                                 />
-                                {thumbnailUrl && (
-                                    <div className="mt-2 rounded-lg overflow-hidden border border-gray-200 aspect-video">
-                                        <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>

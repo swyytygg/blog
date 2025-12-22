@@ -1,12 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff, FolderPlus, Save, X, Settings as SettingsIcon, MessageSquare, Bell, FileText, Upload, BarChart2 } from 'lucide-react';
-import PostList from '../../components/admin/PostList';
-import PostEditor from '../../components/admin/PostEditor';
-import AdminSettings from '../../components/admin/Settings';
-import CategoryManager from '../../components/admin/CategoryManager';
-import GuestbookManager from '../../components/admin/GuestbookManager';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { Plus, Edit, Trash2, Eye, EyeOff, FolderPlus, Save, X, Settings as SettingsIcon, MessageSquare, Bell, FileText, Upload, BarChart2, Layout as LayoutIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
+
+// 관리자용 컴포넌트 Lazy Loading - 성능 최적화
+const PostList = lazy(() => import('../../components/admin/PostList'));
+const PostEditor = lazy(() => import('../../components/admin/PostEditor'));
+const AdminSettings = lazy(() => import('../../components/admin/Settings'));
+const CategoryManager = lazy(() => import('../../components/admin/CategoryManager'));
+const GuestbookManager = lazy(() => import('../../components/admin/GuestbookManager'));
+const TemplateManager = lazy(() => import('../../components/admin/TemplateManager'));
+
+// 탭 로더
+const TabLoader = () => (
+    <div className="py-12 flex flex-col items-center justify-center animate-fadeIn">
+        <div className="w-8 h-8 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+        <p className="text-gray-400 text-sm">기능을 불러오는 중...</p>
+    </div>
+);
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -52,6 +63,8 @@ const AdminDashboard: React.FC = () => {
                 return <CategoryManager />;
             case 'guestbook':
                 return <GuestbookManager />;
+            case 'templates':
+                return <TemplateManager />;
             case 'settings':
                 return <AdminSettings />;
             default:
@@ -111,6 +124,7 @@ const AdminDashboard: React.FC = () => {
                             { id: 'write', label: '글쓰기', icon: Edit },
                             { id: 'posts', label: '글 관리', icon: FileText },
                             { id: 'categories', label: '카테고리', icon: FolderPlus },
+                            { id: 'templates', label: '서식 관리', icon: LayoutIcon },
                             { id: 'guestbook', label: '방명록', icon: MessageSquare },
                             { id: 'settings', label: '설정', icon: SettingsIcon },
                         ].map(tab => (
@@ -138,7 +152,9 @@ const AdminDashboard: React.FC = () => {
 
             {/* 메인 컨텐츠 */}
             <main className="max-w-7xl mx-auto px-4 py-8">
-                {renderContent()}
+                <Suspense fallback={<TabLoader />}>
+                    {renderContent()}
+                </Suspense>
             </main>
 
             {/* 에디터 모달 */}

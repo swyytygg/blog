@@ -2,9 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Layout from './components/layout/Layout';
-import Home from './pages/Home';
-
 // Lazy loading으로 코드 스플리팅 - 초기 번들 크기 감소
+const Home = lazy(() => import('./pages/Home'));
 const PostView = lazy(() => import('./pages/PostView'));
 const CategoryView = lazy(() => import('./pages/CategoryView'));
 const Guestbook = lazy(() => import('./pages/Guestbook'));
