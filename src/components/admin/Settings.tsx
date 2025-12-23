@@ -105,7 +105,7 @@ const AdminSettings: React.FC = () => {
             return;
         }
 
-        const apiKey = import.meta.env.VITE_PUBLIC_PIXABAY_API_KEY;
+        const apiKey = process.env.NEXT_PUBLIC_PUBLIC_PIXABAY_API_KEY;
         if (!apiKey) {
             alert('Pixabay API Key가 설정되지 않았습니다.');
             return;
@@ -484,7 +484,7 @@ const AdminSettings: React.FC = () => {
             {/* Pixabay 모달 */}
             {showPixabayModal && (
                 <PixabayImageSelector
-                    apiKey={import.meta.env.VITE_PUBLIC_PIXABAY_API_KEY || ''}
+                    apiKey={process.env.NEXT_PUBLIC_PUBLIC_PIXABAY_API_KEY || ''}
                     onSelect={(url) => {
                         setSettings({ ...settings, profileImage: url });
                         setShowPixabayModal(false);

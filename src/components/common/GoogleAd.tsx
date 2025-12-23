@@ -30,7 +30,7 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
         }
     }, []);
 
-    const adClient = import.meta.env.VITE_GOOGLE_ADSENSE_ID;
+    const adClient = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
 
     if (!adClient) {
         return (

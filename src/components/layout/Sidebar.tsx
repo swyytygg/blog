@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { ChevronDown, ChevronRight, User, BookOpen, TrendingUp, Tag, Search, Home, MessageSquare, Share2 } from 'lucide-react';
 
 // 카테고리 타입 정의
@@ -55,7 +55,7 @@ const CategoryItem: React.FC<{ category: Category; depth?: number }> = ({ catego
                         <span className="w-[18px]" />
                     )}
                     <Link
-                        to={`/category/${category.slug || category.name}`}
+                        href={`/category/${category.slug || category.name}`}
                         className="flex-1 text-gray-700 hover:text-indigo-600 text-sm truncate"
                     >
                         {category.name}
@@ -103,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <aside className="main-sidebar w-72 min-w-[288px] bg-white border-r border-gray-200 h-full overflow-y-auto">
             {/* 프로필 섹션 */}
             <div className="profile-section p-6 border-b border-gray-100">
-                <Link to="/" className="block">
+                <Link href="/" className="block">
                     <div className="flex flex-col items-center text-center">
                         <div className="profile-image-wrapper mb-4 relative">
                             {profileImage ? (
@@ -150,28 +150,28 @@ const Sidebar: React.FC<SidebarProps> = ({
             {/* 네비게이션 링크 */}
             <div className="nav-links px-4 pt-4">
                 <Link
-                    to="/"
+                    href="/"
                     className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors font-medium"
                 >
                     <Home size={18} />
                     <span>홈</span>
                 </Link>
                 <Link
-                    to="/category/all"
+                    href="/category/all"
                     className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors font-medium"
                 >
                     <BookOpen size={18} />
                     <span>전체 글</span>
                 </Link>
                 <Link
-                    to="/notice"
+                    href="/notice"
                     className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors font-medium"
                 >
                     <BookOpen size={18} className="text-indigo-500" />
                     <span>공지사항</span>
                 </Link>
                 <Link
-                    to="/guestbook"
+                    href="/guestbook"
                     className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors font-medium"
                 >
                     <MessageSquare size={18} />
@@ -225,7 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         {recentPosts.slice(0, 5).map((post) => (
                             <li key={post.id}>
                                 <Link
-                                    to={`/post/${post.slug || post.id}`}
+                                    href={`/post/${post.slug || post.id}`}
                                     className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-indigo-600 rounded-md transition-colors line-clamp-1"
                                 >
                                     {post.title}
@@ -247,7 +247,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         {popularPosts.slice(0, 5).map((post, index) => (
                             <li key={post.id}>
                                 <Link
-                                    to={`/post/${post.slug || post.id}`}
+                                    href={`/post/${post.slug || post.id}`}
                                     className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-indigo-600 rounded-md transition-colors"
                                 >
                                     <span className="flex-shrink-0 w-5 h-5 bg-indigo-100 text-indigo-600 rounded-full text-xs font-bold flex items-center justify-center">
@@ -272,7 +272,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         {tags.slice(0, 15).map((tag) => (
                             <Link
                                 key={tag.name}
-                                to={`/tag/${tag.name}`}
+                                href={`/tag/${tag.name}`}
                                 className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
                             >
                                 #{tag.name}

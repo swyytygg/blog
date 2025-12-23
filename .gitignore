@@ -50,5 +50,11 @@ _archive/
 mcp.json
 .eslintcache
 
+# Next.js
+.next/
+out/
+next-env.d.ts
+.tsbuildinfo
+
 # Vite
 vite.config.ts.timestamp-*

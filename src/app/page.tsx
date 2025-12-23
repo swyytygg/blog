@@ -1,50 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import HeroSection from '../components/home/HeroSection';
 import PostCard from '../components/blog/PostCard';
-import { postService, Post } from '../services/postService';
+import { postService } from '../services/postService';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
-const Home = () => {
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<any>(null);
+export default async function HomePage() {
+    let posts = [];
+    let error = null;
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                // 3열 2행 = 6개 포스트 가져오기
-                const { data, error } = await postService.getPosts(6);
-                if (error) throw error;
-                setPosts(data || []);
-            } catch (err) {
-                console.error('Failed to load posts:', err);
-                setError(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchPosts();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="home-page">
-                <HeroSection />
-                <div className="flex justify-center py-20">
-                    <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                </div>
-            </div>
-        );
+    try {
+        const { data, error: fetchError } = await postService.getPosts(6);
+        if (fetchError) throw fetchError;
+        posts = data || [];
+    } catch (err) {
+        console.error('Failed to load posts:', err);
+        error = err;
     }
 
     return (
         <div className="home-page pb-20">
-            {/* 히어로 섹션 (픽사베이 이미지 + 최신글 링크) */}
             <HeroSection />
 
-            {/* 메인 콘텐츠 영역 */}
             <div id="main-content" className="max-w-[95%] mx-auto px-4 sm:px-8 lg:px-12 py-20">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest Stories</h2>
@@ -57,17 +33,15 @@ const Home = () => {
                     </div>
                 ) : posts.length > 0 ? (
                     <>
-                        {/* 3열 2행 그리드 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {posts.map(post => (
+                            {posts.map((post: any) => (
                                 <PostCard key={post.id} post={post} />
                             ))}
                         </div>
 
-                        {/* 더보기 버튼 */}
                         <div className="mt-16 text-center">
                             <Link
-                                to="/category/all"
+                                href="/category/all"
                                 className="inline-flex items-center gap-2 px-8 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-full hover:bg-gray-50 hover:border-indigo-300 hover:text-indigo-600 transition-all shadow-sm hover:shadow"
                             >
                                 글 더보기
@@ -84,6 +58,4 @@ const Home = () => {
             </div>
         </div>
     );
-};
-
-export default Home;
+}

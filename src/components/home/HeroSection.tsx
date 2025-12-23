@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ChevronDown, ArrowRight } from 'lucide-react';
 import { supabase } from '../../services/supabase';
@@ -55,7 +57,7 @@ const HeroSection: React.FC = () => {
     const loadHeroImage = useCallback(async () => {
         try {
             // 1. Pixabay API로 직접 로드 (가장 우선)
-            const apiKey = import.meta.env.VITE_PUBLIC_PIXABAY_API_KEY;
+            const apiKey = process.env.NEXT_PUBLIC_PIXABAY_API_KEY;
             if (apiKey) {
                 try {
                     // 1페이지에서 30개 정도 가져와서 랜덤 선택

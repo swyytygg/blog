@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { formatDate } from '../../utils/dateFormat';
 import { Eye, MessageCircle, Calendar, Folder } from 'lucide-react';
 
@@ -61,7 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, variant = 'card' }) => {
     if (variant === 'card') {
         return (
             <article className={`post-card group bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-indigo-100 transition-all duration-300 ${!displayImage ? 'flex flex-col h-full bg-gradient-to-br from-white to-indigo-50/30' : ''}`}>
-                <Link to={`/post/${post.slug || post.id}`} className="block h-full">
+                <Link href={`/post/${post.slug || post.id}`} className="block h-full">
                     {/* 콘텐츠 상단 영역 (제목 우선) */}
                     <div className="p-5 flex flex-col">
                         {/* 제목 */}
@@ -128,7 +130,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, variant = 'card' }) => {
     // 리스트형 레이아웃
     return (
         <article className="post-card group bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-indigo-100 transition-all duration-300 p-6">
-            <Link to={`/post/${post.slug || post.id}`} className="flex flex-col sm:flex-row gap-6 items-center">
+            <Link href={`/post/${post.slug || post.id}`} className="flex flex-col sm:flex-row gap-6 items-center">
                 {/* 콘텐츠 영역 (좌측 - 더 넓게) */}
                 <div className="flex-[2] min-w-0 flex flex-col">
                     {/* 카테고리 */}

@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { formatDate } from '../../utils/dateFormat';
 import { Share2, Tag, Calendar, Eye, Clock, MessageCircle, ChevronRight, ChevronLeft, Home, List, Facebook, Twitter, Link2, Copy, ArrowLeft } from 'lucide-react';
 import { postService } from '../../services/postService';
@@ -175,7 +177,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
             <article className="post-detail bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-12 lg:p-16">
                 {/* 브레드크럼 */}
                 <nav className="breadcrumb flex items-center gap-2 text-sm text-gray-500 mb-6">
-                    <Link to="/" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
+                    <Link href="/" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
                         <Home size={14} />
                         <span>홈</span>
                     </Link>
@@ -183,7 +185,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                         <>
                             <ChevronRight size={14} className="text-gray-400" />
                             <Link
-                                to={`/category/${post.category}`}
+                                href={`/category/${post.category}`}
                                 className="hover:text-indigo-600 transition-colors"
                             >
                                 {post.category}
@@ -201,7 +203,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                     {/* 카테고리 */}
                     {post.category && (
                         <Link
-                            to={`/category/${post.category}`}
+                            href={`/category/${post.category}`}
                             className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full mb-4 hover:bg-indigo-200 transition-colors"
                         >
                             {post.category}
@@ -340,7 +342,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                                     {post.tags.map((tag: string, index: number) => (
                                         <Link
                                             key={index}
-                                            to={`/tag/${tag}`}
+                                            href={`/tag/${tag}`}
                                             className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
                                         >
                                             #{tag}
@@ -429,7 +431,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                                 {/* 이전글 */}
                                 {prevPost ? (
                                     <Link
-                                        to={`/post/${prevPost.slug || prevPost.id}`}
+                                        href={`/post/${prevPost.slug || prevPost.id}`}
                                         className="group p-4 bg-gray-50 rounded-xl hover:bg-indigo-50 transition-colors"
                                     >
                                         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
@@ -453,7 +455,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                                 {/* 다음글 */}
                                 {nextPost ? (
                                     <Link
-                                        to={`/post/${nextPost.slug || nextPost.id}`}
+                                        href={`/post/${nextPost.slug || nextPost.id}`}
                                         className="group p-4 bg-gray-50 rounded-xl hover:bg-indigo-50 transition-colors text-right"
                                     >
                                         <div className="flex items-center justify-end gap-2 text-sm text-gray-500 mb-2">
@@ -481,7 +483,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                     <aside className="hidden lg:block w-80 flex-shrink-0">
                         <div className="sticky top-24 space-y-8">
                             {/* 사이드바 광고 영역 - 구글봇을 위해 DOM에 유지하되 승인 전까지는 사용자에게 숨김 */}
-                            <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 ${!import.meta.env.VITE_GOOGLE_ADSENSE_ID ? 'sr-only h-0 overflow-hidden opacity-0' : ''}`}>
+                            <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 ${!process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID ? 'sr-only h-0 overflow-hidden opacity-0' : ''}`}>
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-center">Advertisement</h3>
                                 <GoogleAd
                                     slot="sidebar-ad"
@@ -526,7 +528,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                 {/* 홈 버튼 위치 이동: 글 네비게이션과 댓글 섹션 사이 */}
                 <div className="flex justify-center mt-12 mb-4">
                     <Link
-                        to="/"
+                        href="/"
                         className="inline-flex items-center gap-2 px-8 py-2.5 bg-white text-indigo-600 hover:bg-indigo-50 rounded-full transition-all border-2 border-indigo-500 shadow-md font-medium"
                     >
                         <ArrowLeft size={16} />

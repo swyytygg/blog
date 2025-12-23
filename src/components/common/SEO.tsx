@@ -28,8 +28,8 @@ const SEO: React.FC<SEOProps> = ({
     const currentUrl = url || window.location.href;
 
     // GA4 & Naver Analytics IDs (Env or Config)
-    const gaId = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
-    const naverId = import.meta.env.VITE_NAVER_ANALYTICS_ID;
+    const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
+    const naverId = process.env.NEXT_PUBLIC_NAVER_ANALYTICS_ID;
 
     return (
         <Helmet>
@@ -56,8 +56,8 @@ const SEO: React.FC<SEOProps> = ({
             {image && <meta property="twitter:image" content={image} />}
 
             {/* Google Search Console Verification */}
-            {import.meta.env.VITE_GOOGLE_SITE_VERIFICATION && (
-                <meta name="google-site-verification" content={import.meta.env.VITE_GOOGLE_SITE_VERIFICATION} />
+            {process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && (
+                <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION} />
             )}
 
             {/* Google Analytics 4 */}

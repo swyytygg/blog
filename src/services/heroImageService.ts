@@ -76,12 +76,12 @@ export const heroImageService = {
             }
 
             // Pixabay API Key 가져오기 (환경변수에서)
-            const pixabayApiKey = import.meta.env.VITE_PUBLIC_PIXABAY_API_KEY;
+            const pixabayApiKey = process.env.NEXT_PUBLIC_PUBLIC_PIXABAY_API_KEY;
 
             if (!pixabayApiKey) {
                 return {
                     success: false,
-                    message: 'Pixabay API Key가 설정되지 않았습니다. .env.local에 VITE_PUBLIC_PIXABAY_API_KEY를 추가해주세요.',
+                    message: 'Pixabay API Key가 설정되지 않았습니다. .env.local에 NEXT_PUBLIC_PUBLIC_PIXABAY_API_KEY를 추가해주세요.',
                     uploadedCount: 0
                 };
             }

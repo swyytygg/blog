@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Menu, X, Search } from 'lucide-react';
 
 interface HeaderProps {
@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({
 
                 {/* 블로그 제목 */}
                 <Link
-                    to="/"
+                    href="/"
                     className="text-lg font-bold text-gray-900 tracking-wide"
                 >
                     {blogName}
@@ -35,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({
 
                 {/* 검색 버튼 */}
                 <Link
-                    to="/search"
+                    href="/search"
                     className="p-2 -mr-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                     aria-label="검색"
                 >

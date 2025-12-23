@@ -94,7 +94,7 @@ const PixabayImageSelector: React.FC<PixabayImageSelectorProps> = ({ apiKey, onS
                     {!apiKey ? (
                         <div className="h-full flex flex-col items-center justify-center text-gray-500">
                             <p>Pixabay API Key가 설정되지 않았습니다.</p>
-                            <p className="text-sm mt-2">.env.local에 VITE_PUBLIC_PIXABAY_API_KEY를 추가해주세요.</p>
+                            <p className="text-sm mt-2">.env.local에 NEXT_PUBLIC_PUBLIC_PIXABAY_API_KEY를 추가해주세요.</p>
                         </div>
                     ) : error ? (
                         <div className="h-full flex items-center justify-center text-red-500">
