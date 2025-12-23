@@ -185,7 +185,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                         <>
                             <ChevronRight size={14} className="text-gray-400" />
                             <Link
-                                href={`/category/${post.category}`}
+                                href={post.category === '공지사항' ? '/notice' : post.category === '방명록' ? '/guestbook' : `/category/${post.category}`}
                                 className="hover:text-indigo-600 transition-colors"
                             >
                                 {post.category}
@@ -203,7 +203,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
                     {/* 카테고리 */}
                     {post.category && (
                         <Link
-                            href={`/category/${post.category}`}
+                            href={post.category === '공지사항' ? '/notice' : post.category === '방명록' ? '/guestbook' : `/category/${post.category}`}
                             className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full mb-4 hover:bg-indigo-200 transition-colors"
                         >
                             {post.category}

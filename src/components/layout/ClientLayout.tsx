@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -86,22 +86,47 @@ const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setIsMobileSidebarOpen(!isMobileSidebarOpen);
     };
 
+    const pathname = usePathname();
+    const isAdminPage = pathname?.startsWith('/admin');
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             {/* SEO는 Next.js Metadata API로 이전됨 */}
 
-            {/* 모바일 헤더 */}
-            <Header
-                blogName={blogConfig.name}
-                onMenuToggle={toggleMobileSidebar}
-                isSidebarOpen={isMobileSidebarOpen}
-            />
+            {!isAdminPage && (
+                <>
+                    {/* 모바일 헤더 */}
+                    <Header
+                        blogName={blogConfig.name}
+                        onMenuToggle={toggleMobileSidebar}
+                        isSidebarOpen={isMobileSidebarOpen}
+                    />
 
-            <div className="flex flex-col lg:flex-row pt-14 lg:pt-0 relative">
+                    {/* Desktop Trigger Zone */}
+                    <div className="hidden lg:block fixed left-0 top-0 h-full w-14 z-50 hover:w-72 group transition-all duration-300">
+                        <div className="absolute left-0 top-0 h-full w-72 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl z-50">
+                            <Sidebar
+                                blogName={blogConfig.name}
+                                blogDescription={blogConfig.description}
+                                profileImage={blogConfig.profileImage}
+                                categories={categories}
+                                recentPosts={recentPosts}
+                                popularPosts={popularPosts}
+                                tags={tags}
+                                onSearch={handleSearch}
+                                loading={categoriesLoading || dataLoading}
+                            />
+                        </div>
+                    </div>
 
-                {/* Desktop Trigger Zone */}
-                <div className="hidden lg:block fixed left-0 top-0 h-full w-14 z-50 hover:w-72 group transition-all duration-300">
-                    <div className="absolute left-0 top-0 h-full w-72 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl z-50">
+                    {/* 사이드바 - 모바일 */}
+                    <div
+                        className={`
+                            fixed top-14 left-0 h-[calc(100vh-3.5rem)] lg:hidden
+                            transform transition-transform duration-300 ease-in-out z-40
+                            ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                        `}
+                    >
                         <Sidebar
                             blogName={blogConfig.name}
                             blogDescription={blogConfig.description}
@@ -114,41 +139,22 @@ const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                             loading={categoriesLoading || dataLoading}
                         />
                     </div>
+
+                    {isMobileSidebarOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+                            onClick={() => setIsMobileSidebarOpen(false)}
+                        />
+                    )}
+                </>
+            )}
+
+            <main className={`flex-1 flex flex-col ${isAdminPage ? 'min-h-screen' : 'min-h-[calc(100vh-3.5rem)] lg:min-h-screen pt-14 lg:pt-0'}`}>
+                <div className="w-full flex-1">
+                    {children}
                 </div>
 
-                {/* 사이드바 - 모바일 */}
-                <div
-                    className={`
-                        fixed top-14 left-0 h-[calc(100vh-3.5rem)] lg:hidden
-                        transform transition-transform duration-300 ease-in-out z-40
-                        ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                    `}
-                >
-                    <Sidebar
-                        blogName={blogConfig.name}
-                        blogDescription={blogConfig.description}
-                        profileImage={blogConfig.profileImage}
-                        categories={categories}
-                        recentPosts={recentPosts}
-                        popularPosts={popularPosts}
-                        tags={tags}
-                        onSearch={handleSearch}
-                        loading={categoriesLoading || dataLoading}
-                    />
-                </div>
-
-                {isMobileSidebarOpen && (
-                    <div
-                        className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-                        onClick={() => setIsMobileSidebarOpen(false)}
-                    />
-                )}
-
-                <main className="flex-1 flex flex-col min-h-[calc(100vh-3.5rem)] lg:min-h-screen">
-                    <div className="w-full flex-1">
-                        {children}
-                    </div>
-
+                {!isAdminPage && (
                     <footer className="border-t border-gray-200 bg-white mt-12">
                         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -164,8 +170,8 @@ const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                             </div>
                         </div>
                     </footer>
-                </main>
-            </div>
+                )}
+            </main>
         </div>
     );
 };

@@ -18,7 +18,7 @@ const nextConfig = {
         ],
     },
     turbopack: {
-        root: '.',
+        root: 'C:\\Users\\아마존소프트\\Desktop\\blog_final_clean',
     },
 };
 

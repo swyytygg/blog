@@ -3,9 +3,29 @@ import { categoryService } from '../../../services/categoryService';
 import PostList from '../../../components/blog/PostList';
 import Link from 'next/link';
 import { Folder, ArrowLeft } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
-    const { category } = await params;
+    const rawCategory = (await params).category;
+    let category = '';
+    try {
+        category = decodeURIComponent(rawCategory);
+        // 혹시 더블 인코딩된 경우를 대비해 한 번 더 시도 (안전장치)
+        if (category.includes('%')) {
+            category = decodeURIComponent(category);
+        }
+    } catch (e) {
+        category = rawCategory;
+    }
+
+    // 공지사항이나 방명록 카테고리로 직접 접근 시 전용 페이지로 이동
+    if (category === '공지사항') {
+        redirect('/notice');
+    }
+    if (category === '방명록') {
+        redirect('/guestbook');
+    }
+
     let posts: any[] = [];
     let displayName = category;
     let isAllView = category === 'all';
@@ -48,7 +68,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                         <div className="text-6xl mb-4">📂</div>
                         <p className="text-gray-500 text-lg">"{displayName}" 카테고리의 글이 없습니다.</p>
                         <Link
-                            href="/"
+                            href="/category/all"
                             className="inline-block mt-6 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                         >
                             전체 글 보기

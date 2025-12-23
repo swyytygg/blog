@@ -34,7 +34,7 @@ export default async function NoticePage() {
                         <div className="text-6xl mb-4">📂</div>
                         <p className="text-gray-500 text-lg">"{displayName}" 카테고리의 글이 없습니다.</p>
                         <Link
-                            href="/"
+                            href="/category/all"
                             className="inline-block mt-6 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                         >
                             전체 글 보기

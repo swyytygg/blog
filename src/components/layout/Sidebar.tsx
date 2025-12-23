@@ -55,7 +55,7 @@ const CategoryItem: React.FC<{ category: Category; depth?: number }> = ({ catego
                         <span className="w-[18px]" />
                     )}
                     <Link
-                        href={`/category/${category.slug || category.name}`}
+                        href={category.name === '공지사항' ? '/notice' : category.name === '방명록' ? '/guestbook' : `/category/${category.slug || category.name}`}
                         className="flex-1 text-gray-700 hover:text-indigo-600 text-sm truncate"
                     >
                         {category.name}
